@@ -1,3 +1,5 @@
+#!/usr/bin/ruby
+
   #############################################################################
  #
 # Stochastic Drone
@@ -9,14 +11,15 @@
 # Based on the tampura method by John Pitts in "How to Play Indian Sitar Ragas
 # on a Piano"
 # 
-# IMPORTANT: Look below for the parameters to configure
-#
-
 require 'distribution'
 require 'midilib/sequence'
 require 'midilib/consts'
-
+require 'optparse'
 include MIDI
+
+seq = Sequence.new # Need a sequencer for output
+
+
 
   #############################################################################
  #
@@ -54,12 +57,13 @@ desh       = [-5, -1, 0, -12, -5, 0, 2, 0, -12]  # Sharp 6
 malhar     = [-5, 0, 0, -12, -5, 2, 0, 0, -12]   # 9
 chayanat   = [-5, 2, -12, -5, 4, 2, -12]         # tritone
 
+
 bliss          = [ 0, 7, 9, 7, 9, [0, 2, 4, 5], Grace.new(-12, -7), [-10, -19, -24]] # straight (bliss)
 mountain_stream= [-5, 0, 0, 2, 0, -2, 0, -12]        # minor 
 little_girl    = [-5, 0, 0, -12, -1, 0, [-5], [4], [2], [-1]] 
 landscape      = [ 7, 11, 12, 12, 14, [7], [9], [11], Grace.new(-5, 0),  [-5], [-12], [-17]] # sweeping landscape
 wise_man       = [-5, -2, 0, 0, [2], [4], [-10], -12] # major
-gezelle        = [-5, [-4], 0, 0, [1], [4], [-1], -12] # occasional head butts
+gazelle        = [-5, [-4], 0, 0, [1], [4], [-1], -12] # occasional head butts
 moonlight      = [ 7, 12, 14, 10, 12, [8, 10, -2], 0] 
 waiting_bride  = [-5, 0, 0, 2, [2, 3, 5], -12]
 sleep          = [-7, -5, -2, 0, -12, -7, -5, 0, 2, -2, 0, -12]
@@ -111,13 +115,50 @@ pollen_br_up  = [na,na,na,na,na,na,na,na,20,13,12,20,13,12,20,13,
                  13,11,12,20,19,13,11,12,20,19,13,11,12,16,20,
                  19,13,11,12,15,20,13,12]
 
-seq = Sequence.new
+patterns = [classical, alternate, latangi, todi, vachaspati, patdeep, desh, malhar, chayanat,
+            bliss, mountain_stream, little_girl, landscape, wise_man, gazelle, moonlight,
+            waiting_bride, sleep, pollen_breeze, elegant_mischief, saffron_aroma,
+            ruddy_goose, intense_coffee, morning_sun, mourning, full_of_hope, 
+            lady_lost_in_forest, lunchtime_bell, flowing_honey, stealing_my_heart,
+            beautiful_hair, from_the_east, satisfaction, pollen_br_lwr, pollen_br_up]
+
+  #############################################################################
+ #
+# Parse command line options
+#
+options = {
+  :pattern => 0,
+  :tonic   => 60,     # Middle-C
+  :bpm     => 120,
+  :rng     => "exp",  # Exponential
+  :notelen => 4*seq.note_to_delta('quarter'),
+  :repeat  => 24,
+  :program => 89, # General Midi Pad
+  :optional=> 4,
+  :filename=> 'stoch_drone.mid'
+}
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: gendrone [options]"
+  
+  opts.on("-h", "--help", "Prints this help") do
+    puts ops
+    exit
+  end
+
+  opts.on("-p=PATTERN_NUM", "--pattern=PATTERN_NUM", "Specify Pattern Number") do |n|
+    options[:pattern] = n
+  end  
+
+end.parse!
+
+
+tampura = patterns[options[:pattern]]
 
   #############################################################################
  #
 # Configuration Parameters, i.e. Change these to suit your needs
 #
-tampura  = lady_lost_in_forest
 #tonic    = 48    # Low C in midi is center
 tonic    = 60   # Middle C
 bpm      = 120
@@ -169,14 +210,14 @@ repeats.times do
     end
     unless note.class == NilClass
       if note.class == Grace
-         track.events << NoteOn.new(0, tonic + note.first, 100, pause)
+         track.events << NoteOn.new(0, options[:tonic] + note.first, 100, pause)
          pause=0
-         track.events << NoteOff.new(0, tonic + note.first, 100, (note_len/32).to_i)
+         track.events << NoteOff.new(0, options[:tonic] + note.first, 100, (note_len/32).to_i)
          note = note.second
       end
-      track.events << NoteOn.new(0, tonic + note, 100, pause)
+      track.events << NoteOn.new(0, options[:tonic] + note, 100, pause)
       pause=0
-      track.events << NoteOff.new(0, tonic + note, 100,
+      track.events << NoteOff.new(0, options[:tonic] + note, 100,
         (note_len * rng.call).to_i)
     end
   end
