@@ -20,7 +20,6 @@ include MIDI
 seq = Sequence.new # Need a sequencer for output
 
 
-
   #############################################################################
  #
 # Grace note class
@@ -135,7 +134,8 @@ options = {
   :repeats => 24,
   :program => 89, # General Midi Pad
   :optional=> [true, false, false, false], # 1 in 4 chance
-  :filename=> 'stoch_drone.mid'
+  :filename=> 'stoch_drone.mid',
+  :grace   => 32 # Division of note_len to use for grace note
 }
 
 OptionParser.new do |opts|
@@ -214,6 +214,15 @@ OptionParser.new do |opts|
     options[:program] = p
   end
 
+  opts.on("-gGRACE", "--grace=GRACE", "Division of note length to use for grace note. Default 32.") do |g|
+    g = g.to_i
+    if g < 1 or g > 128
+      puts "GRACE must be between 1 and 128"
+      exit
+    end
+    options[:grace] = g
+  end
+
   opts.on("-rRNG", "--random=RNG", "Random number generator. Options: 'none', 'exp', 'gamma2', 'gamma9', or 'uniform'. Default 'exp'.") do |r|
     # All of these have a mean of 1.0
     if r == 'none'
@@ -239,36 +248,36 @@ The descriptions use the Nashville Number system, denoting the tonic as 1. The d
 0. Classical. The classical tampura drone tuning. Simple 4 note pattern. Works with any scale having a tonic and fifth.
 1. Alternate. A lesser used tampura drone tuning. Instead of 5th, contains the 4th.
 2. Latangi. A simpler version of 11. Little Girl below. Mood: playful. Intended scale 1 2 3 #4 5 b6 7.
-3. Todi A simpler version of Lady Lost in the Forest. Mood: unsettled, fearful. Intended scale 1 b2 b3 #4 (5) b6 7. 
-4. Vachaspati. A simpler version of Wise Old Man. Mood: taking it in stride. Intended scale 1 2 3 #4 5 6 b7. 
+3. Todi A simpler version of 26. Lady Lost in the Forest. Mood: unsettled, fearful. Intended scale 1 b2 b3 #4 (5) b6 7. 
+4. Vachaspati. A simpler version of 13. Wise Old Man. Mood: taking it in stride. Intended scale 1 2 3 #4 5 6 b7. 
 5. Patdeep. A simpler version of Stealing My Heart. Mood: yearing. Intended scale 1 2 b3 3 4 5 6 7
-6. Desh. A simpler version of Sweeping Landscape. Mood: majestic joy. Intended scale 1 2 3 4 5 6 b7/7
+6. Desh. A simpler version of 12. Sweeping Landscape. Mood: majestic joy. Intended scale 1 2 3 4 5 6 b7/7
 7. Malhar or Monsoon. Mood: murkey, causing rain. Intended scale 1 2 b3 4 5 6 b7/7
-8. Chayanta or Glimpse of Shadow.  Mood: sweet. Intended scale 1 2 3 4 5 6 7
-9. Bliss or Kalyani. Mood: Peaceful.
-10. Mountain Stream or Hemavati. Mood: Aredently Thoughtful.
-11. Little Girl or Latangi. Mood: Playful.
-12. Sweeping Landscape or Desh. Mood: Majestic Joy.
-13. Wise Old Man or Vachaspati. Mood: Taking it in Stride. 
-14. Gazelle or Gazellish. Mood: Sprightly.
-15. Moonlight or Kalavati. Mood: Light Romantic or Playful.
-16. Waiting Bride or Bagesri. Mood: Light Romantic.
-17. Sleep or Neenda. Mood: Melancholy, Mysterious.
-18. Pollen on the Breeze or Paraj.  Mood: Peaceful, ecstatic.
-19. Elegant Mischief or Lalit. Mood: Ludicrous, mischievous.
-20. Aroma of Saffron or Jogiya kalingra. Mood: Wonderous.
-21. Ruddy Goose or Chakravak. Mood: Ridiculous, silly, playful.
-22. Intense Coffee or Kofi. Mood: Magical, moody and intense.
-23. Morning Sun or Suraja. Mood: Peaceful and warm.
-24. Mourning or Bilaskhani Todi. Mood: Mourning, grieving, devotional.
-25. Full of Hope or Asavari. Mood: Heroic, Striving, Conviction.
-26. Lady Lost in the Forest or Todi. Mood: Fearful.
-27. Lunchtime Bell or Gaud Sarang. Mood: Peaceful, satisfied.
-28. Flowing with Honey or Madhuvanti. Mood: Soothing, magical.
-29. Stealing my Heart or Patdeep. Mood: Yearing, falling in love.
-30. Beautiful Hair or Charukesi. Mood: Determined, nostalgic.
-31. From the East or Purvi. Mood: Light, romantic, charming, graceful.
-32. Satisfaction. Mood: Humourous, magical.
+8. Chayanta or Glimpse of Shadow. Mood: sweet. Intended scale 1 2 3 4 5 6 7
+9. Bliss or Kalyani. Mood: Peaceful. Intended scale 1 2 3 #4 5 6 7
+10. Mountain Stream or Hemavati. Mood: Aredently Thoughtful. Intended scale 1 2 b3 #4 5 6 b7
+11. Little Girl or Latangi. Mood: Playful. Intended scale 1 2 3 #4 5 b6 7.
+12. Sweeping Landscape or Desh. Mood: Majestic Joy. Intended scale 1 2 3 4 5 6 b7/7
+13. Wise Old Man or Vachaspati. Mood: Taking it in Stride. Intended scale 1 2 3 #4 5 6 b7
+14. Gazelle or Gazellish. Mood: Sprightly. Intended scale 1 b2/2 b3/3 4 5 b6 b7/7. Scale switches flexibly, but not chromatically.
+15. Moonlight or Kalavati. Mood: Light Romantic or Playful. Intended scale 1 2 3 4 5 6 b7. Mixolydian
+16. Waiting Bride or Bagesri. Mood: Light Romantic. Intended scale 1 2 b3 4 5 6 b7. 
+17. Sleep or Neenda. Mood: Melancholy, Mysterious. Intended scale 1 b2 b3 4 5 b6 b7
+18. Pollen on the Breeze or Paraj.  Mood: Peaceful, ecstatic. Intended scale 1 b2 3 #4 5 b6 7
+19. Elegant Mischief or Lalit. Mood: Ludicrous, mischievous. Intended scale 1 b2 3 4 b5 b6 7. Mischief between 4 and b5. 
+20. Aroma of Saffron or Jogiya kalingra. Mood: Wonderous. Intended scale 1 b2 3 4 5 b6 7
+21. Ruddy Goose or Chakravak. Mood: Ridiculous, silly, playful. Intended scale 1 b2 3 4 5 6 b7
+22. Intense Coffee or Kofi. Mood: Magical, moody and intense. Intended scale 1 2 b3 #4 5 b6 7
+23. Morning Sun or Suraja. Mood: Peaceful and warm. Intended scale 1 b2 3 #4 5 6 b7
+24. Mourning or Bilaskhani Todi. Mood: Mourning, grieving, devotional. Intended scale 1 b2 b3 4 5 b6 b7
+25. Full of Hope or Asavari. Mood: Heroic, Striving, Conviction. Intended scale 1 2 b3 4 5 b6 b7
+26. Lady Lost in the Forest or Todi. Mood: Fearful. Intended scale 1 b2 b3 #4 (5) b6 7
+27. Lunchtime Bell or Gaud Sarang. Mood: Peaceful, satisfied. Intended scale 1 2 3 4 5 6 7. Will work with any with any having a natural 5th.
+28. Flowing with Honey or Madhuvanti. Same as 1 but an octave lower. Mood: Soothing, magical. Intended scale 1 2 b3 #4 5 6 7
+29. Stealing my Heart or Patdeep. Mood: Yearing, falling in love. Intended scale 1 2 b3 4 5 b6 7
+30. Beautiful Hair or Charukesi. Mood: Determined, nostalgic. Intended scale 1 2 3 4 5 b6 (b7)
+31. From the East or Purvi. Mood: Light, romantic, charming, graceful. Intended scale 1 b2 3 #4 5 b6 7
+32. Satisfaction. Mood: Humourous, magical. Intended scale 1 b2 3 #4 (5) 6 7
 33. Special lower intro track to 18 Pollen. Use 1 iteration and mix with 34. 
 34. Special upper intro track to 18 Pollen. Use 1 iteration and mix with 33.
 DESC
@@ -322,7 +331,7 @@ options[:repeats].times do
       if note.class == Grace
          track.events << NoteOn.new(0, options[:tonic] + note.first, 100, pause)
          pause=0
-         track.events << NoteOff.new(0, options[:tonic] + note.first, 100, (options[:note_len]/32).to_i)
+         track.events << NoteOff.new(0, options[:tonic] + note.first, 100, (options[:note_len]/options[:grace]).to_i)
          note = note.second
       end
       track.events << NoteOn.new(0, options[:tonic] + note, 100, pause)
