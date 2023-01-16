@@ -146,7 +146,7 @@ OptionParser.new do |opts|
     exit
   end
 
-  opts.on("-aARRANGEMENT", "--arrangement=ARRANGEMENT", "Arrangement Number (0-34). Default 0.") do |n|
+  opts.on("-aARRANGEMENT", "--arrangement=ARRANGEMENT", "Arrangement Number (0-34). Default 0. See: `gendrone -d`") do |n|
     n = n.to_i
     if n < 0 or n > 34 
       puts "Arrangement number must be in the range 0-34"
@@ -232,6 +232,47 @@ OptionParser.new do |opts|
     end
   end
 
+  opts.on("-d", "--describe", "Describe programmed arrangements.") do
+    puts  <<-DESC
+The descriptions use the Nashville Number system, denoting the tonic as 1. The drone arrangements programmed are as follows:
+
+0. Classical. The classical tampura drone tuning. Simple 4 note pattern. Works with any scale having a tonic and fifth.
+1. Alternate. A lesser used tampura drone tuning. Instead of 5th, contains the 4th.
+2. Latangi. A simpler version of 11. Little Girl below. Mood: playful. Intended scale 1 2 3 #4 5 b6 7.
+3. Todi A simpler version of Lady Lost in the Forest. Mood: unsettled, fearful. Intended scale 1 b2 b3 #4 (5) b6 7. 
+4. Vachaspati. A simpler version of Wise Old Man. Mood: taking it in stride. Intended scale 1 2 3 #4 5 6 b7. 
+5. Patdeep. A simpler version of Stealing My Heart. Mood: yearing. Intended scale 1 2 b3 3 4 5 6 7
+6. Desh. A simpler version of Sweeping Landscape. Mood: majestic joy. Intended scale 1 2 3 4 5 6 b7/7
+7. Malhar or Monsoon. Mood: murkey, causing rain. Intended scale 1 2 b3 4 5 6 b7/7
+8. Chayanta or Glimpse of Shadow.  Mood: sweet. Intended scale 1 2 3 4 5 6 7
+9. Bliss or Kalyani. Mood: Peaceful.
+10. Mountain Stream or Hemavati. Mood: Aredently Thoughtful.
+11. Little Girl or Latangi. Mood: Playful.
+12. Sweeping Landscape or Desh. Mood: Majestic Joy.
+13. Wise Old Man or Vachaspati. Mood: Taking it in Stride. 
+14. Gazelle or Gazellish. Mood: Sprightly.
+15. Moonlight or Kalavati. Mood: Light Romantic or Playful.
+16. Waiting Bride or Bagesri. Mood: Light Romantic.
+17. Sleep or Neenda. Mood: Melancholy, Mysterious.
+18. Pollen on the Breeze or Paraj.  Mood: Peaceful, ecstatic.
+19. Elegant Mischief or Lalit. Mood: Ludicrous, mischievous.
+20. Aroma of Saffron or Jogiya kalingra. Mood: Wonderous.
+21. Ruddy Goose or Chakravak. Mood: Ridiculous, silly, playful.
+22. Intense Coffee or Kofi. Mood: Magical, moody and intense.
+23. Morning Sun or Suraja. Mood: Peaceful and warm.
+24. Mourning or Bilaskhani Todi. Mood: Mourning, grieving, devotional.
+25. Full of Hope or Asavari. Mood: Heroic, Striving, Conviction.
+26. Lady Lost in the Forest or Todi. Mood: Fearful.
+27. Lunchtime Bell or Gaud Sarang. Mood: Peaceful, satisfied.
+28. Flowing with Honey or Madhuvanti. Mood: Soothing, magical.
+29. Stealing my Heart or Patdeep. Mood: Yearing, falling in love.
+30. Beautiful Hair or Charukesi. Mood: Determined, nostalgic.
+31. From the East or Purvi. Mood: Light, romantic, charming, graceful.
+32. Satisfaction. Mood: Humourous, magical.
+33. Special lower intro track to 18 Pollen. Use 1 iteration and mix with 34. 
+34. Special upper intro track to 18 Pollen. Use 1 iteration and mix with 33.
+DESC
+  end
 
 end.parse!
 
