@@ -324,7 +324,7 @@ options[:repeats].times do
       note = offset
     elsif offset.class == NilClass
       note = nil
-      pause += (options[:note_len]*rng.call).to_i
+      pause += (options[:note_len]*options[:rng].call).to_i
     else 
       if options[:optional].sample
         note = offset.sample       
