@@ -130,11 +130,11 @@ options = {
   :pattern => 0,
   :tonic   => 60,     # Middle-C
   :bpm     => 120,
-  :rng     => "exp",  # Exponential
-  :notelen => 4*seq.note_to_delta('quarter'),
-  :repeat  => 24,
+  :rng     => Distribution::Exponential.rng(1),
+  :note_len=> 4*seq.note_to_delta('quarter'),
+  :repeats => 24,
   :program => 89, # General Midi Pad
-  :optional=> 4,
+  :optional=> [true, false, false, false], # 1 in 4 chance
   :filename=> 'stoch_drone.mid'
 }
 
@@ -142,33 +142,102 @@ OptionParser.new do |opts|
   opts.banner = "Usage: gendrone [options]"
   
   opts.on("-h", "--help", "Prints this help") do
-    puts ops
+    puts opts
     exit
   end
 
-  opts.on("-p=PATTERN_NUM", "--pattern=PATTERN_NUM", "Specify Pattern Number") do |n|
+  opts.on("-aARRANGEMENT", "--arrangement=ARRANGEMENT", "Arrangement Number (0-34). Default 0.") do |n|
+    n = n.to_i
+    if n < 0 or n > 34 
+      puts "Arrangement number must be in the range 0-34"
+      exit
+    end
     options[:pattern] = n
   end  
+
+  opts.on("-tTONIC", "--tonic=TONIC", "MIDI tonic note. Default 60, i.e. middle C.") do |t|
+    t = t.to_i
+    if t < 0 or t > 127 
+      puts "Tonic must be in the range 0-127"
+      exit
+    end
+    options[:tonic] = t
+  end
+
+  opts.on("-bBPM", "--bpm=BPM", "Beats per minute info. Default 120.") do |b|
+    b = b.to_i
+    if b < 1 or b > 1000
+      puts "BPM must be in the range 1-1000"
+      exit
+    end
+    options[:bpm] = b
+  end
+
+  opts.on("-fFILENAME", "--filename=FILENAME", "Output filename. Default 'stoch_drone.mid'.") do |f|
+    options[:filename] = f
+  end
+
+  opts.on("-iITERATIONS", "--iterations=ITERATIONS", "Iteration count of pattern. Default 24.") do |i| 
+    i = i.to_i
+    if i<1 
+      puts "ITERATIONS must be positive"
+      exit
+    end
+    options[:repeats] = i
+  end
+
+  opts.on("-lNOTE_LEN", "--length=NOTE_LEN", "Average length of note in terms of quarter note. Default 4.") do |l|
+    l = l.to_f
+    if l<0 or l > 100
+      puts "NOTE_LEN must be greater than 0 and less than or equal to 100."
+      exit
+    end
+    options[:note_len] = (l*seq.note_to_delta('quarter')).round
+  end
+
+  opts.on("-oOPTIONAL", "--optional=OPTIONAL", "Optional notes as 1 in OPTIONAL odds. Default 4.") do |o|
+    o = o.to_i
+    if o < 1 or o > 100
+      puts "OPTIONAL must be between 1 and 100"
+      exit
+    end
+    options[:optional] = Array.new(o, false)
+    options[:optional][0] = true
+  end
+
+  opts.on("-pPROGRAM", "--program=PROGRAM", "MIDI Program for track. Default 89 GM pad.") do |p|
+    p = p.to_i
+    if p < 1 or p > 128
+      puts "PROGRAM must be between 1 and 128"
+      exit
+    end
+    options[:program] = p
+  end
+
+  opts.on("-rRNG", "--random=RNG", "Random number generator. Options: 'none', 'exp', 'gamma2', 'gamma9', or 'uniform'. Default 'exp'.") do |r|
+    # All of these have a mean of 1.0
+    if r == 'none'
+      options[:rng] = lambda {1}
+    elsif r == 'exp'
+      options[:rng] = Distribution::Exponential.rng(1.0) 
+    elsif r == 'gamma2'
+      options[:rng] = lambda {Distribution::Gamma.p_value(rand(), 2.0, 2.0)/4.0}
+    elsif r == 'gamma9'
+      options[:rng] = lambda {Distribution::Gamma.p_value(rand(), 9.0, 0.5)/4.5}
+    elsif r == 'uniform'
+      options[:rng] = lambda {rand()*2.0}
+    else
+      puts "Unhandled RNG category"
+      exit
+    end
+  end
+
 
 end.parse!
 
 
 tampura = patterns[options[:pattern]]
 
-  #############################################################################
- #
-# Configuration Parameters, i.e. Change these to suit your needs
-#
-#tonic    = 48    # Low C in midi is center
-tonic    = 60   # Middle C
-bpm      = 120
-# rng      = lambda {1}                         # For a fixed time pulse on a quarter note
-rng      = Distribution::Exponential.rng(1)   # rng must always return a positive number
-note_len = 4*seq.note_to_delta('quarter')
-repeats  = 24
-program  = 89 # General Midi Pad Patch
-optional = [true, false, false, false] # A 1 in 4 chance
-filename = 'stoch_drone.mid'
 
   #############################################################################
  #
@@ -178,31 +247,31 @@ filename = 'stoch_drone.mid'
 # like that.
 track = Track.new(seq)
 seq.tracks << track
-track.events << Tempo.new(Tempo.bpm_to_mpq(bpm))
+track.events << Tempo.new(Tempo.bpm_to_mpq(options[:bpm]))
 track.events << MetaEvent.new(META_SEQ_NAME, 'Stochastic Drone')
 
 # Create a track to hold the notes. Add it to the sequence.
 track = Track.new(seq)
 seq.tracks << track
 track.name = 'StochDrone'
-track.instrument = GM_PATCH_NAMES[program-1]
+track.instrument = GM_PATCH_NAMES[options[:program]-1]
 
 # Add events to the track: a major scale. Arguments for note on and note off
 # constructors are channel, note, velocity, and delta_time. Channel numbers
 # start at zero. We use the new Sequence#note_to_delta method to get the
 # delta time length of a single quarter note.
-track.events << ProgramChange.new(0, program, 0)
+track.events << ProgramChange.new(0, options[:program], 0)
 pause = 0
-repeats.times do
+options[:repeats].times do
   tampura.each do |offset|
     if offset.class == Grace   or 
        offset.class == Integer 
       note = offset
     elsif offset.class == NilClass
       note = nil
-      pause += (note_len*rng.call).to_i
+      pause += (options[:note_len]*rng.call).to_i
     else 
-      if optional.sample
+      if options[:optional].sample
         note = offset.sample       
       else
         note = nil
@@ -212,15 +281,15 @@ repeats.times do
       if note.class == Grace
          track.events << NoteOn.new(0, options[:tonic] + note.first, 100, pause)
          pause=0
-         track.events << NoteOff.new(0, options[:tonic] + note.first, 100, (note_len/32).to_i)
+         track.events << NoteOff.new(0, options[:tonic] + note.first, 100, (options[:note_len]/32).to_i)
          note = note.second
       end
       track.events << NoteOn.new(0, options[:tonic] + note, 100, pause)
       pause=0
       track.events << NoteOff.new(0, options[:tonic] + note, 100,
-        (note_len * rng.call).to_i)
+        (options[:note_len] * options[:rng].call).to_i)
     end
   end
 end
 
-File.open(filename, 'wb') { |file| seq.write(file) }
+File.open(options[:filename], 'wb') { |file| seq.write(file) }
