@@ -135,7 +135,7 @@ options = {
   :program => 89, # General Midi Pad
   :optional=> [true, false, false, false], # 1 in 4 chance
   :filename=> 'stoch_drone.mid',
-  :grace   => 32 # Division of note_len to use for grace note
+  :grace   => 32, # Division of note_len to use for grace note
 }
 
 OptionParser.new do |opts|
@@ -223,6 +223,10 @@ OptionParser.new do |opts|
     options[:grace] = g
   end
 
+  opts.on("-sSEED", "--seed=SEED", "random seed") do |s|
+    srand(s.to_i)
+  end
+
   opts.on("-rRNG", "--random=RNG", "Random number generator. Options: 'none', 'exp', 'gamma2', 'gamma9', or 'uniform'. Default 'exp'.") do |r|
     # All of these have a mean of 1.0
     if r == 'none'
@@ -272,7 +276,7 @@ The descriptions use the Nashville Number system, denoting the tonic as 1. The d
 24. Mourning or Bilaskhani Todi. Mood: Mourning, grieving, devotional. Intended scale 1 b2 b3 4 5 b6 b7
 25. Full of Hope or Asavari. Mood: Heroic, Striving, Conviction. Intended scale 1 2 b3 4 5 b6 b7
 26. Lady Lost in the Forest or Todi. Mood: Fearful. Intended scale 1 b2 b3 #4 (5) b6 7
-27. Lunchtime Bell or Gaud Sarang. Mood: Peaceful, satisfied. Intended scale 1 2 3 4 5 6 7. Will work with any with any having a natural 5th.
+27. Lunchtime Bell or Gaud Sarang. Mood: Peaceful, satisfied. Intended scale 1 2 3 4 5 6 7. Will work with any with any having a natural 5th. Same as 1 but lower.
 28. Flowing with Honey or Madhuvanti. Same as 1 but an octave lower. Mood: Soothing, magical. Intended scale 1 2 b3 #4 5 6 7
 29. Stealing my Heart or Patdeep. Mood: Yearing, falling in love. Intended scale 1 2 b3 4 5 b6 7
 30. Beautiful Hair or Charukesi. Mood: Determined, nostalgic. Intended scale 1 2 3 4 5 b6 (b7)
@@ -285,6 +289,7 @@ DESC
 
 end.parse!
 
+puts "Random seed : #{Random.seed}\n"
 
 tampura = patterns[options[:pattern]]
 
